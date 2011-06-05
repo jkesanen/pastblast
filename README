@@ -1,0 +1,38 @@
+Pastblast - A command line Last.fm track submitter
+
+Scans track information from single media files and directories (of media 
+files) to submit (scrobble) them into user's Last.fm account. 
+
+I like to follow what I listen to and how often. It guides my album purchases 
+and reminds me of what I haven't been listening for a long time. Currently I 
+have almost six years worth of my listening habbits on Last.fm. At some point 
+I needed an application that could submit the tracks I have listened in car, 
+on living room's CD player, using my SanDisk Sansa Clip ogg/flac/wma/mp3 
+player. Thus Pastblast.
+
+  - Takes directories and single files as arguments
+  - Uses Mutagen library to access metadata from tracks
+  - Specify when track(s) were listened
+  - Submit track(s) to Last.fm through pylast library
+  - Manual track submit mode (for Youtube, Bandcamp, Vimeo, Soundcloud etc.)
+
+
+Requirements:
+
+  - Python 2.x - http://www.python.org/
+  - Mutagen library - http://code.google.com/p/mutagen/
+  - pylast library - http://code.google.com/p/pylast/
+
+
+Usage examples:
+
+  pastblast.py -t 7h20 ~/music/Nine_Inch_Nails_-_The_Slip-2008
+
+  Scrobble all the supported tracks from this directory. Listening ended
+  7 hours and 20 minutes ago.
+
+
+  pastblast.py ~/music/How_To_Destroy_Angels_-_How_To_Destroy_Angels-EP-2010/02 Parasite.mp3 \
+               ~/music/Nine_Inch_Nails_-_The_Slip-2008/05-Nine_Inch_Nails_-_Echoplex.ogg
+
+  Scrobble two tracks that were just listened.
