@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # pastblast - A Python application to scrobble listened tracks to Last.fm.
-# Copyright (C) 2009-2010 Jani Kesänen
+# Copyright (C) 2009-2011 Jani Kesänen
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,12 +25,11 @@ pylast last.fm API interface library. They are available at
 http://code.google.com/p/mutagen/ and http://code.google.com/p/pylast/
 
 TODO:
-    - FLAC Support
     - Login information from config file?
     - Proxy support
 """
 
-__version__ = '0.4.1'
+__version__ = '0.5.0'
 __author__ = 'Jani Kesänen'
 __copyright__ = "Copyright (C) 2009-2011 Jani Kesänen"
 __license__ = "gpl"
@@ -100,7 +99,7 @@ class pastblast(object):
 
 
     def process_mp3_file(self, filename):
-        """Extract metadata information from an mp3 file and add it into
+        """Extract metadata information from a mp3 file and add it into
            track storage.
         """
         from mutagen.id3 import ID3NoHeaderError, ID3UnsupportedVersionError
@@ -226,7 +225,53 @@ class pastblast(object):
         return True
 
 
+    def process_flac_file(self, filename):
+        """Extract metadata information from a flac file and add it into
+           track storage.
+        """
+        from mutagen.flac import Open
+
+        self.log.debug(("Processing %s" % filename))
+
+        try:
+            flac = Open(filename)
+        except KeyboardInterrupt:
+            raise
+        except Exception, err:
+            self.log.error(("Failed to access %s" % filename))
+            return False
+
+        if flac.tags:
+            # Verify that required information is present.
+            if not flac.tags.has_key('ARTIST') or not flac.tags.has_key('TITLE'):
+                self.log.error("Required information is missing. Can not queue this track.")
+                return False
+            if flac.info.length < 30:
+                self.log.warning("Minimum lenght of a track for submitting is 30 seconds. Skipping...")
+                return True
+
+            if flac.tags.has_key('ALBUM'):
+                album = flac.tags['ALBUM'][0]
+            else:
+                album = ""
+            if flac.tags.has_key('TRACKNUMBER'):
+                tracknum = flac.tags['TRACKNUMBER'][0]
+            else:
+                tracknum = ""
+
+            self.log.debug(("%s - %s - %s, %f" % (flac.tags['ARTIST'][0], album, flac.tags['TITLE'][0], flac.info.length)))
+
+            self.ss.add_track(flac.tags['ARTIST'][0], flac.tags['TITLE'][0], flac.info.length, album, tracknum)
+        else:
+            self.log.warning(("%s is not tagged." % filename))
+            return False
+
+        return True
+
+
     def process_file(self, filename):
+        ok = False
+
         if filename.lower().endswith('.mp3'):
             ok = self.process_mp3_file(filename)
         elif filename.lower().endswith('.ogg'):
@@ -234,7 +279,7 @@ class pastblast(object):
         elif filename.lower().endswith('.wma'):
             ok = self.process_wma_file(filename)
         elif filename.lower().endswith('.flac'):
-            self.log.warning("FLAC FORMAT IS NOT YET SUPPORTED")
+            ok = self.process_flac_file(filename)
         else:
             return
 
