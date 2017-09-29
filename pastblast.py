@@ -325,11 +325,8 @@ class pastblast(object):
         else:
             hash = pylast.md5(password)
 
-        network = pylast.get_lastfm_network(api_key=API_KEY, api_secret=API_SECRET, username=username, password_hash=hash)
+        network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET, username=username, password_hash=hash)
         sg = pylast.SessionKeyGenerator(network)
-        #session_key = sg.get_session_key(username, hash)
-
-        scrob = network.get_scrobbler("tst", "0.1")
 
         # Ending time of listening (minus timeshift).
         now = time.time() - timeshift
@@ -337,7 +334,7 @@ class pastblast(object):
         while len(self.ss):
             listened = int(now - self.ss.duration)
             s = self.ss.pop_track()
-            scrob.scrobble(s['artist'], s['title'], listened, pylast.SCROBBLE_SOURCE_USER, pylast.SCROBBLE_MODE_PLAYED, str(int(s['length'])), s['album'], s['tracknum'])
+            network.scrobble(s['artist'], s['title'], listened, album=s['album'], track_number=s['tracknum'], duration=int(s['length']))
 
 
     def manual_add(self):
