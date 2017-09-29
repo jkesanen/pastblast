@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # pastblast - A Python application to scrobble listened tracks to Last.fm.
-# Copyright (C) 2009-2011 Jani Kesänen
+# Copyright (C) 2009-2017 Jani Kesänen
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,9 +29,9 @@ TODO:
     - Proxy support
 """
 
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 __author__ = 'Jani Kesänen'
-__copyright__ = "Copyright (C) 2009-2011 Jani Kesänen"
+__copyright__ = "Copyright (C) 2009-2017 Jani Kesänen"
 __license__ = "gpl"
 
 import logging
@@ -404,7 +404,7 @@ def usage(progname):
 
 def version():
     print("Pastblast %s (+ pylast %s)" % (__version__, pylast.__version))
-    print("Copyright (C) 2009-2011 Jani Kesänen")
+    print("Copyright (C) 2009-2017 Jani Kesänen")
     print("""License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.""")
@@ -486,7 +486,7 @@ if __name__ == "__main__":
         import pylast
     except ImportError:
         print("Importing pylast failed.")
-        print("  Project homepage: http://code.google.com/p/pylast/")
+        print("  Project home: https://github.com/pylast/pylast/")
         import_error = True
 
     try:
