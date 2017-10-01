@@ -20,16 +20,15 @@
 # USA
 #
 
-""" This application depends on Mutagen audio metadata handling library and 
-pylast last.fm API interface library. They are available at 
-http://code.google.com/p/mutagen/ and http://code.google.com/p/pylast/
-
-TODO:
-    - Login information from config file?
-    - Proxy support
+""" This application depends on Mutagen audio metadata handling library and
+pylast last.fm API interface library. They are available at pip and
+https://github.com/quodlibet/mutagen and https://github.com/pylast/pylast
 """
 
-__version__ = '0.5.1'
+from __future__ import print_function
+from builtins import input
+
+__version__ = '0.6.0'
 __author__ = 'Jani Kesänen'
 __copyright__ = "Copyright (C) 2009-2017 Jani Kesänen"
 __license__ = "gpl"
@@ -45,7 +44,6 @@ import sys
 API_KEY = ""
 API_SECRET = ""
 
-
 class pastblast(object):
 
     class track_storage(object):
@@ -59,7 +57,7 @@ class pastblast(object):
 
         def add_track(self, artist, title, length, album, tracknum):
             self.duration += length
-            self.songs.append({ 'artist': unicode(artist).encode("utf-8"), 'title': unicode(title).encode("utf-8"), 'length': str(int(length)), 'flength': length, 'album': unicode(album).encode("utf-8"), 'tracknum': unicode(tracknum).encode("utf-8")})
+            self.songs.append({ 'artist': artist, 'title': title, 'length': str(int(length)), 'flength': length, 'album': album, 'tracknum': tracknum })
 
 
         def pop_track(self):
@@ -80,7 +78,6 @@ class pastblast(object):
 
     def __init__(self, debug=False):
         """Initialize pastblast class."""
-        self.total_time = 0.0
         self.ss = self.track_storage()
         self.warnings = False
 
@@ -111,7 +108,7 @@ class pastblast(object):
             mp3 = MP3(filename)
         except KeyboardInterrupt:
             raise
-        except Exception, err:
+        except Exception:
             self.log.error(("Failed to access %s" % filename))
             return False
 
@@ -152,7 +149,7 @@ class pastblast(object):
             ogg = Open(filename)
         except KeyboardInterrupt:
             raise
-        except Exception, err:
+        except Exception:
             self.log.error(("Failed to access %s" % filename))
             return False
 
@@ -193,7 +190,7 @@ class pastblast(object):
             asf = Open(filename)
         except KeyboardInterrupt:
             raise
-        except Exception, err:
+        except Exception:
             self.log.error(("Failed to access %s" % filename))
             return False
 
@@ -237,7 +234,7 @@ class pastblast(object):
             flac = Open(filename)
         except KeyboardInterrupt:
             raise
-        except Exception, err:
+        except Exception:
             self.log.error(("Failed to access %s" % filename))
             return False
 
@@ -310,13 +307,13 @@ class pastblast(object):
     def submit_tracks(self, username = '', password = '', timeshift = 0):
         """Scrobble tracks from track storage to last.fm."""
         if self.warnings:
-            ret = raw_input("Files processed with warnings. Continue (y/N)?")
+            ret = input("Files processed with warnings. Continue (y/N)?")
             if ret != 'y':
                 return
 
         if not username:
             # Read username from stdin if not provided
-            username = raw_input("Username: ")
+            username = input("Username: ")
 
         if not password:
             # Read password from stdin if not provided
@@ -340,19 +337,19 @@ class pastblast(object):
     def manual_add(self):
         """Manually enter tracks to be scrobbled. Empty artist or track ends session."""
         while True:
-            artist = raw_input("Artist: ")
+            artist = input("Artist: ")
 
             if not len(artist):
                 self.log.info("Empty artist name. Stopping manual input...")
                 break
 
-            track = raw_input("Track: ")
+            track = input("Track: ")
 
             if not len(track):
                 self.log.info("Empty track title. Stopping manual input...")
                 break
 
-            val = raw_input("Length: ")
+            val = input("Length: ")
             try:
                 values = val.split(':')
             except:
@@ -366,11 +363,26 @@ class pastblast(object):
                 self.log.error("Track length must be entered in seconds or in hh:mm:ss notation. Stopping...")
                 break
 
-            tracknum = raw_input("Track number: ")
-            album = raw_input("Album: ")
+            album = input("Album: ")
 
-            enc = sys.stdin.encoding
-            self.ss.add_track(unicode(artist, enc), unicode(track, enc), length, unicode(album, enc), tracknum)
+            while True:
+                tracknum = input("Track number: ")
+                if not tracknum:
+                    break
+
+                try:
+                    int(tracknum)
+                    break
+                except ValueError as err:
+                    self.log.error("Track number must indeed be a number. Or empty.")
+                    # While continues and ask again for the number
+
+            if sys.version_info[0] == 2:
+                artist = artist.decode(sys.stdin.encoding)
+                track = track.decode(sys.stdin.encoding)
+                album = album.decode(sys.stdin.encoding)
+
+            self.ss.add_track(artist, track, length, album, tracknum)
             self.log.info("Track added")
 
 
@@ -441,9 +453,9 @@ def main(argv):
 
     try:
         opts, args = getopt.getopt(argv[1:], "dmrt:u:")
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         # Print help information and exit.
-        print str(err)
+        print("GetoptError: {0}".format(err))
         usage(argv[0])
         sys.exit(2)
 
@@ -484,16 +496,16 @@ if __name__ == "__main__":
 
     try:
         import pylast
-    except ImportError:
-        print("Importing pylast failed.")
-        print("  Project home: https://github.com/pylast/pylast/")
+    except ImportError as err:
+        print("Importing pylast failed: {0}".format(err))
+        print("  Project home: https://github.com/pylast/pylast")
         import_error = True
 
     try:
         from mutagen.id3 import ID3
     except ImportError:
-        print("Importing mutagen failed.")
-        print("  Project homepage: http://code.google.com/p/mutagen/")
+        print("Importing mutagen failed: {0}".format(err))
+        print("  Project homepage: https://github.com/quodlibet/mutagen")
         import_error = True
 
     if import_error:
