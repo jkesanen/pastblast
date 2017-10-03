@@ -51,29 +51,36 @@ class pastblast(object):
            scrobble to last.fm.
         """
         def __init__(self):
-            self.songs = []
+            self.tracks = []
             self.duration = 0.0
 
 
-        def add_track(self, artist, title, length, album, tracknum):
-            self.duration += length
-            self.songs.append({ 'artist': artist, 'title': title, 'length': str(int(length)), 'flength': length, 'album': album, 'tracknum': tracknum })
+        def add_track(self, artist, title, duration, album, tracknum):
+            self.duration += duration
+            self.tracks.append({ 'artist': artist, 'title': title, 'duration': duration, 'album': album, 'track_number': tracknum, 'timestamp': 0 })
 
 
         def pop_track(self):
             try:
-                self.duration -= self.songs[0]['flength']
-                return self.songs.pop(0)
+                self.duration -= self.tracks[0]['duration']
+                return self.tracks.pop(0)
             except IndexError:
                 return
 
 
         def get_track(self, num):
-            return self.songs[num]
+            return self.tracks[num]
+
+
+        def update_timestamps(self, ending_time):
+            tracktime = ending_time - self.duration
+            for i in range(0, len(self.tracks)):
+                self.tracks[i]['timestamp'] = tracktime
+                tracktime += self.tracks[i]['duration']
 
 
         def __len__(self):
-            return len(self.songs)
+            return len(self.tracks)
 
 
     def __init__(self, debug=False):
@@ -304,34 +311,42 @@ class pastblast(object):
                         self.process_file(os.path.join(path, filename))
 
 
-    def submit_tracks(self, username = '', password = '', timeshift = 0):
-        """Scrobble tracks from track storage to last.fm."""
-        if self.warnings:
-            ret = input("Files processed with warnings. Continue (y/N)?")
-            if ret != 'y':
-                return
+    def update_timestamps(self, ending_time):
+        self.ss.update_timestamps(ending_time)
 
-        if not username:
-            # Read username from stdin if not provided
-            username = input("Username: ")
 
-        if not password:
-            # Read password from stdin if not provided
-            import getpass
+    def manual_login(self, username):
+        """Get username and password from stdin and login to last.fm."""
+        import getpass
+
+        while True:
+            if username:
+                name = username
+            else:
+                # Read username from stdin if not provided
+                name = input("Username: ")
+
+            # Read password from stdin
             hash = pylast.md5(getpass.getpass())
+
+            # Continue until valid username and password received
+            try:
+                network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET, username=name, password_hash=hash)
+                return network
+            except pylast.WSError as err:
+                self.log.error(err)
+
+
+    def submit_tracks(self, username = '', password_hash = ''):
+        """Scrobble tracks from track storage to last.fm."""
+        if not password_hash:
+            network = self.manual_login(username)
         else:
-            hash = pylast.md5(password)
-
-        network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET, username=username, password_hash=hash)
-        sg = pylast.SessionKeyGenerator(network)
-
-        # Ending time of listening (minus timeshift).
-        now = time.time() - timeshift
+            network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET, username=username, password_hash=hash)
 
         while len(self.ss):
-            listened = int(now - self.ss.duration)
             s = self.ss.pop_track()
-            network.scrobble(s['artist'], s['title'], listened, album=s['album'], track_number=s['tracknum'], duration=int(s['length']))
+            network.scrobble(s['artist'], s['title'], s['timestamp'], album=s['album'], track_number=s['track_number'], duration=s['duration'])
 
 
     def manual_add(self):
@@ -484,11 +499,22 @@ def main(argv):
         for path in args:
             pb.scan_path(path, recursive)
 
-    if pb.num_queued():
-        pb.list_tracks()
-        pb.submit_tracks(username=username, timeshift=timeshift)
-    else:
+    if not pb.num_queued():
         print("No tracks in queue.")
+        sys.exit(0)
+
+    pb.list_tracks()
+
+    if pb.warnings:
+        ret = input("Files processed with warnings. Continue (y/N)?")
+        if ret != 'y':
+            sys.exit(1)
+
+    # Update the listening time of the tracks
+    ending_time = time.time() - timeshift
+    pb.update_timestamps(ending_time)
+
+    pb.submit_tracks(username=username)
 
 
 if __name__ == "__main__":
