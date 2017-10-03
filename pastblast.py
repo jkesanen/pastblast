@@ -113,19 +113,19 @@ class pastblast(object):
             return False
 
         if mp3.tags:
-            # Verify that required information is present.
-            if not mp3.tags.has_key('TPE1') or not mp3.tags.has_key('TIT2'):
+            # Verify the required information is present.
+            if 'TPE1' not in mp3.tags or 'TIT2' not in mp3.tags:
                 self.log.error("Required information is missing. Can not queue this track.")
                 return False
             if mp3.info.length < 30:
                 self.log.warning("Minimum lenght of a track for submitting is 30 seconds. Skipping...")
                 return True
 
-            if mp3.tags.has_key('TALB'):
+            if 'TALB' in mp3.tags:
                 album = mp3.tags['TALB'][0]
             else:
                 album = ""
-            if mp3.tags.has_key('TRCK'):
+            if 'TRCK' in mp3.tags:
                 tracknum = mp3.tags['TRCK'][0]
             else:
                 tracknum = ""
@@ -154,19 +154,19 @@ class pastblast(object):
             return False
 
         if ogg.tags:
-            # Verify that required information is present.
-            if not ogg.tags.has_key('artist') or not ogg.tags.has_key('title'):
+            # Verify the required information is present.
+            if 'artist' not in ogg.tags or 'title' not in ogg.tags:
                 self.log.error("Required information is missing. Can not queue this track.")
                 return False
             if ogg.info.length < 30:
                 self.log.warning("Minimum lenght of a track for submitting is 30 seconds. Skipping...")
                 return True
 
-            if ogg.tags.has_key('album'):
+            if 'album' in ogg.tags:
                 album = ogg.tags['album'][0]
             else:
                 album = ""
-            if ogg.tags.has_key('tracknumber'):
+            if 'tracknumber' in ogg.tags:
                 tracknum = ogg.tags['tracknumber'][0]
             else:
                 tracknum = ""
@@ -195,19 +195,19 @@ class pastblast(object):
             return False
 
         if asf:
-            # Verify that required information is present.
-            if not asf.has_key('WM/AlbumArtist') or not asf.has_key('Title'):
+            # Verify the required information is present.
+            if 'WM/AlbumArtist' not in asf or 'Title' not in asf:
                 self.log.error("Required information is missing. Can not queue this track.")
                 return False
             if asf.info.length < 30:
                 self.log.warning("Minimum lenght of a track for submitting is 30 seconds. Skipping...")
                 return True
 
-            if asf.has_key('WM/AlbumArtist'):
+            if 'WM/AlbumArtist' in asf:
                 album = asf['WM/AlbumArtist'][0]
             else:
                 album = ""
-            if asf.has_key('WM/TrackNumber'):
+            if 'WM/TrackNumber' in asf:
                 tracknum = asf['WM/TrackNumber'][0]
             else:
                 tracknum = ""
@@ -239,19 +239,19 @@ class pastblast(object):
             return False
 
         if flac.tags:
-            # Verify that required information is present.
-            if not flac.tags.has_key('ARTIST') or not flac.tags.has_key('TITLE'):
+            # Verify the required information is present.
+            if 'ARTIST' not in flac.tags or 'TITLE' not in flac.tags:
                 self.log.error("Required information is missing. Can not queue this track.")
                 return False
             if flac.info.length < 30:
                 self.log.warning("Minimum lenght of a track for submitting is 30 seconds. Skipping...")
                 return True
 
-            if flac.tags.has_key('ALBUM'):
+            if 'ALBUM' in flac.tags:
                 album = flac.tags['ALBUM'][0]
             else:
                 album = ""
-            if flac.tags.has_key('TRACKNUMBER'):
+            if 'TRACKNUMBER' in flac.tags:
                 tracknum = flac.tags['TRACKNUMBER'][0]
             else:
                 tracknum = ""
