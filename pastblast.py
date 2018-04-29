@@ -529,7 +529,7 @@ if __name__ == "__main__":
 
     try:
         from mutagen.id3 import ID3
-    except ImportError:
+    except ImportError as err:
         print("Importing mutagen failed: {0}".format(err))
         print("  Project homepage: https://github.com/quodlibet/mutagen")
         import_error = True
